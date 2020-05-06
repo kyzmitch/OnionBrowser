@@ -111,6 +111,9 @@ class Tab: UIView {
 	var skipHistory = false
 
 	var history = [HistoryViewController.Item]()
+	
+	private var canGoBackObservation: NSKeyValueObservation?
+    private var canGoForwardObservation: NSKeyValueObservation?
 
 	override var isUserInteractionEnabled: Bool {
 		didSet {
@@ -284,6 +287,8 @@ class Tab: UIView {
 
 		let block = {
 			NotificationCenter.default.removeObserver(self)
+			self.canGoForwardObservation?.invalidate()
+			self.canGoBackObservation?.invalidate()
 
 			self.tabDelegate = nil
 			self.scrollView.delegate = nil
@@ -342,6 +347,14 @@ class Tab: UIView {
 			self, selector: #selector(progressEstimateChanged(_:)),
 			name: NSNotification.Name(rawValue: "WebProgressEstimateChangedNotification"),
 			object: webView.value(forKeyPath: "documentView.webView"))
+		
+		// For some navigations on some websites which use non direct links and URLs
+		// it's reliable to use delegate methods to determine the moment when
+		// navigation UI state should be updated, so that, there is only one
+		// way to detect navigation changes instead of direct call canGoBack property
+		// of UIWebView, need to observe value changes from it.
+		addWebViewCanGoBackObserver()
+		addWebViewCanGoForwardObserver()
 
 		// Immediately refresh the page if its host settings were changed, so
 		// users sees the impact of their changes.
@@ -360,6 +373,24 @@ class Tab: UIView {
 
 		setupGestureRecognizers()
 	}
+	
+	private func addWebViewCanGoBackObserver() {
+        canGoBackObservation?.invalidate()
+        canGoBackObservation = webView.observe(\.canGoBack, options: [.new]) { [weak self] (_, change) in
+            guard let self = self else { return }
+            guard let value = change.newValue else { return }
+			// TODO: how to update back button?
+        }
+    }
+    
+    private func addWebViewCanGoForwardObserver() {
+        canGoForwardObservation?.invalidate()
+        canGoForwardObservation = webView.observe(\.canGoForward, options: [.new]) { [weak self] (_, change) in
+            guard let self = self else { return }
+            guard let value = change.newValue else { return }
+            // TODO: how to update forward button?
+        }
+    }
 
 	@objc
 	private func progressEstimateChanged(_ notification: Notification) {
