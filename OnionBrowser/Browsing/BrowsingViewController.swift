@@ -11,6 +11,7 @@
 import UIKit
 
 class BrowsingViewController: UIViewController, TabDelegate {
+	
 
 	@objc
 	enum Transition: Int {
@@ -379,10 +380,16 @@ class BrowsingViewController: UIViewController, TabDelegate {
 		}
 
 		updateEncryptionBt(tab.secureMode)
-		backBt.isEnabled = tab.canGoBack
-		frwrdBt.isEnabled = tab.canGoForward
 		actionBt.isEnabled = !tab.url.isSpecial
 		updateTabCount()
+	}
+	
+	func updateBackNavigation(_ canGoBack: Bool) {
+		backBt.isEnabled = canGoBack
+	}
+	
+	func updateForwardNavigation(_ canGoForward: Bool) {
+		frwrdBt.isEnabled = canGoForward
 	}
 
 	@objc

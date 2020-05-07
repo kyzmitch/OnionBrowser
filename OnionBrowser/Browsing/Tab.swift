@@ -13,6 +13,10 @@ import QuickLook
 
 protocol TabDelegate: class {
 	func updateChrome()
+	
+	func updateBackNavigation(_ canGoBack: Bool)
+	
+	func updateForwardNavigation(_ canGoForward: Bool)
 
 	func addNewTab(_ url: URL?) -> Tab?
 
@@ -379,7 +383,7 @@ class Tab: UIView {
         canGoBackObservation = webView.observe(\.canGoBack, options: [.new]) { [weak self] (_, change) in
             guard let self = self else { return }
             guard let value = change.newValue else { return }
-			// TODO: how to update back button?
+			self.tabDelegate?.updateBackNavigation(value)
         }
     }
     
@@ -388,7 +392,11 @@ class Tab: UIView {
         canGoForwardObservation = webView.observe(\.canGoForward, options: [.new]) { [weak self] (_, change) in
             guard let self = self else { return }
             guard let value = change.newValue else { return }
-            // TODO: how to update forward button?
+			// This closure isn't called during testing in Simulator
+			// with Sec. level 3 selected.
+			// Actually loading progress never completes and
+			// stays at 60% or 80% even on simple websites.
+			self.tabDelegate?.updateForwardNavigation(value)
         }
     }
 
